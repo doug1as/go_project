@@ -16,8 +16,9 @@ import csv
 from netmiko import ConnectHandler
 from datetime import datetime
 import functions_decorators
+import os
 
-def all_devices(username, password, hostname, ip, device_type, vendor, row_vendor):
+def all_devices(username, password, hostname, ip, device_type, vendor, row_vendor, ssh_config):
     # Current date and time for creating .log file
     now = datetime.today()
     text_date_hour = now.strftime("%Y%m%d-%H%M%S")
@@ -26,12 +27,14 @@ def all_devices(username, password, hostname, ip, device_type, vendor, row_vendo
     # Print 3 asterisk (s) and inform element that is being accessed starting the capture
     functions_decorators.decorator_astherisc(3)
     functions_decorators.decorator_begin(vendor, hostname, ip)
-    functions_decorators.decorator_astherisc(1)
+    functions_decorators.decorator_astherisc(1)    
     # Accessing the element of the time
-    element = {'device_type': device_type, 'host': ip, 'username': username, 'password': password}
+    element = {'device_type': device_type, 'host': ip, 'username': username, 'password': password, 'ssh_config_file': ssh_config}
     host_connect = ConnectHandler(**element)
+    #Getting Current Directory
+    current_directory = os.getcwd()
     # Looping commands contained in commands.csv
-    with open('commands.csv', encoding='utf8', errors='ignore') as commands_csv_file:
+    with open(os.path.join(current_directory,'commands.csv'), encoding='utf8', errors='ignore') as commands_csv_file:
         commands = csv.DictReader(commands_csv_file, delimiter=';')
         for row in commands:
             if row[row_vendor] == '':

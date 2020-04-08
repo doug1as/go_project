@@ -1,4 +1,6 @@
 commands.csv
 elements.csv
+go_vendors-bkp.py
+go-bkp.py
 __pycache__
 .vscode

@@ -27,6 +27,8 @@
 
 # Importing required modules
 import logging
+import os
+import platform
 import csv
 import getpass
 import functions_decorators
@@ -37,44 +39,71 @@ from datetime import datetime
 functions_decorators.decorator_author()
 
 # Generating log file for analysis when needed
-logging.basicConfig(filename='go.log', level=logging.DEBUG)
-logger = logging.getLogger("netmiko")
+#logging.basicConfig(filename='go.log', level=logging.DEBUG)
+#logger = logging.getLogger("netmiko")
 
+# Getting start date and time for measure elapsed time
 start = datetime.today()
-username = str(input("Inform your RADIUS or TACACS user (it depends on the equipment): "))
-password = getpass.getpass("Inform your RADIUS or TACACS password: ")
 
-with open('elements.csv', encoding='utf8', errors='ignore') as elements_csv_file:
+# Obtaining credentials
+username = str(input("Inform your TACACS user: "))
+password = getpass.getpass("Inform your TACACS password: ")
+
+# Getting home directory for user, and find correct ssh config file for respective jump server
+operational_system = platform.system()
+
+if operational_system == 'Windows':
+    ssh_file_location = os.path.expanduser("~\.ssh\\")
+elif operational_system == 'Linux':
+    ssh_file_location = os.path.expanduser("~/.ssh/")
+else:
+    print("This Operating System Isn't Supported By This Script !")
+
+#Getting Current Directory
+current_directory = os.getcwd()
+
+# Open and read device list to be accessed for obtain configurations, named elements.csv
+with open(os.path.join(current_directory, 'elements.csv'), encoding='utf8', errors='ignore') as elements_csv_file:
     elements = csv.DictReader(elements_csv_file, delimiter=';')
     for row in elements:
-        hostname = row['Hostname']
+        hostname = row['HOSTNAME']
         ip = row['IP']
-        vendor = row['Vendor']
-        device_type = row['Devide_Type']
+        vendor = row['VENDOR']
+        device_type = row['DEVICE_TYPE']
+        jump_host = row['JUMP_HOST']
+
+        #Finding correct jump server and allocating ssh/config properly
+        if jump_host == 'vivo_1':
+            ssh_config = ssh_file_location + 'config-vivo1'
+        elif jump_host == 'vivo_2':
+            ssh_config = ssh_file_location + 'config-vivo2'
+        else:
+            ssh_config = '~/.ssh/config'
+        
         if device_type == 'brocade_nos':
             row_vendor = "BROCADE_NOS"
-            go_vendors.all_devices(username, password, hostname, ip, device_type, vendor, row_vendor)
+            go_vendors.all_devices(username, password, hostname, ip, device_type, vendor, row_vendor, ssh_config)
         elif device_type == 'cisco_ios':
             row_vendor = "CISCO_IOS"
-            go_vendors.all_devices(username, password, hostname, ip, device_type, vendor, row_vendor)
+            go_vendors.all_devices(username, password, hostname, ip, device_type, vendor, row_vendor, ssh_config)
         elif device_type == 'cisco_xe':
             row_vendor = "CISCO_IOSXE"
-            go_vendors.all_devices(username, password, hostname, ip, device_type, vendor, row_vendor)
+            go_vendors.all_devices(username, password, hostname, ip, device_type, vendor, row_vendor, ssh_config)
         elif device_type == 'cisco_xr':
             row_vendor = "CISCO_IOSXR"
-            go_vendors.all_devices(username, password, hostname, ip, device_type, vendor, row_vendor)
+            go_vendors.all_devices(username, password, hostname, ip, device_type, vendor, row_vendor, ssh_config)
         elif device_type == 'cisco_nxos':
             row_vendor = "CISCO_NXOS"
-            go_vendors.all_devices(username, password, hostname, ip, device_type, vendor, row_vendor)
+            go_vendors.all_devices(username, password, hostname, ip, device_type, vendor, row_vendor, ssh_config)
         elif device_type == 'extreme_telnet':
             row_vendor = "EXTREME_EXOS"
-            go_vendors.all_devices(username, password, hostname, ip, device_type, vendor, row_vendor)
+            go_vendors.all_devices(username, password, hostname, ip, device_type, vendor, row_vendor, ssh_config)
         elif device_type == 'hp_comware':
             row_vendor = "HP_COMWARE"
-            go_vendors.all_devices(username, password, hostname, ip, device_type, vendor, row_vendor)
+            go_vendors.all_devices(username, password, hostname, ip, device_type, vendor, row_vendor, ssh_config)
         elif device_type == 'ruckus_fastiron':
             row_vendor = "RUCKUS_FASTIRON"
-            go_vendors.all_devices(username, password, hostname, ip, device_type, vendor, row_vendor)
+            go_vendors.all_devices(username, password, hostname, ip, device_type, vendor, row_vendor, ssh_config)
         else:
             functions_decorators.decorator_astherisc(3)
             print("Something's Wrong With Next Element in elements.csv Archive, in Device Type column, please verify !")
